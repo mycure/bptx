@@ -1,0 +1,73 @@
+/*
+ *
+ * [balancing0]
+ *
+ * operations:		10
+ * arraysz:		4
+ *
+ * key:			16-bit
+ * value:		32-bit
+ * addr:		32-bit
+ * interval:		32-bit
+ *
+ * uaddr:		-1
+ * uval:		-1
+ *
+ * blksz:		59
+ *
+ */
+
+#define IN_ADDR_T		u_int32_t
+#define IN_KEY_T		u_int16_t
+#define IN_VALUE_T		u_int32_t
+#define IN_INTERVAL_T		u_int32_t
+
+typedef struct			s_in_inentry
+{
+  IN_KEY_T			key;
+  IN_ADDR_T			value;
+  IN_INTERVAL_T			interval;
+}				__attribute__((packed)) t_in_inentry;
+
+typedef struct			s_in_lfentry
+{
+  IN_KEY_T			key;
+  IN_VALUE_T			value;
+  IN_INTERVAL_T			interval;
+}				__attribute__((packed)) t_in_lfentry;
+
+#define IN_NAME			"balancing0"
+
+#define IN_NODESZ		59
+#define IN_UNUSED_ADDR		-1
+#define IN_UNUSED_KEY		-1
+#define IN_UNUSED_VALUE		-1
+#define IN_FLAGS		BPT_FLAG_CALLBACK
+
+#include "tree.h"
+
+#define IN_INPUT_NOPS		10
+
+t_in_input		input[IN_INPUT_NOPS] =
+{
+  {	0,	IN_ADD,	0,		42507,		36545	},
+  {	1,	IN_ADD,	0,		48879,		31802	},
+  {	2,	IN_ADD,	0,		19677,		1878	},
+  {	3,	IN_ADD,	0,		23851,		21731	},
+  {	4,	IN_ADD,	0,		42852,		16686	},
+  {	5,	IN_REM,	42507,		0,		0	},
+  {	6,	IN_REM,	48879,		0,		0	},
+  {	7,	IN_ADD,	0,		34243,		15818	},
+  {	8,	IN_ADD,	0,		2561,		23154	},
+  {	9,	IN_REM,	42852,		0,		0	},
+};
+
+#define IN_OUTPUT_NOPS		4
+
+t_in_output		output[IN_OUTPUT_NOPS] =
+{
+  {	2561,	23154	},
+  {	19677,	1878	},
+  {	23851,	21731	},
+  {	34243,	15818	},
+};

@@ -1,0 +1,63 @@
+/*
+ *
+ * [add0]
+ *
+ * operations:		4
+ * arraysz:		4
+ *
+ * key:			32-bit
+ * value:		32-bit
+ * addr:		32-bit
+ *
+ * uaddr:		-1
+ * uval:		-1
+ *
+ * blksz:		59
+ *
+ */
+
+#define IN_ADDR_T		u_int32_t
+#define IN_KEY_T		u_int32_t
+#define IN_VALUE_T		u_int32_t
+
+typedef struct			s_in_inentry
+{
+  IN_KEY_T			key;
+  IN_ADDR_T			value;
+}				__attribute__((packed)) t_in_inentry;
+
+typedef struct			s_in_lfentry
+{
+  IN_KEY_T			key;
+  IN_VALUE_T			value;
+}				__attribute__((packed)) t_in_lfentry;
+
+#define IN_NAME			"add0"
+
+#define IN_NODESZ		59
+#define IN_UNUSED_ADDR		-1
+#define IN_UNUSED_KEY		-1
+#define IN_UNUSED_VALUE		-1
+#define IN_FLAGS		BPT_FLAG_ZERO
+
+#include "tree.h"
+
+#define IN_INPUT_NOPS		4
+
+t_in_input		input[IN_INPUT_NOPS] =
+{
+  {	0,	IN_ADD,	0,		59,		8	},
+  {	1,	IN_ADD,	0,		1,		9	},
+  {	2,	IN_ADD,	0,		186,		5	},
+  {	3,	IN_ADD,	0,		35,		5	},
+};
+
+#define IN_OUTPUT_NOPS	4
+
+t_in_output		output[IN_OUTPUT_NOPS] =
+{
+  {	1,	9	},
+  {	35,	5	},
+  {	59,	8	},
+  {	186,	5	},
+};

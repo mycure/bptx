@@ -1,0 +1,68 @@
+/*
+ *
+ * [rem1]
+ *
+ * operations:		6
+ * arraysz:		4
+ *
+ * key:			32-bit
+ * value:		32-bit
+ * addr:		32-bit
+ * interval:		32-bit
+ *
+ * unused:		-1
+ *
+ * blksz:		59
+ *
+ */
+
+#define IN_ADDR_T		u_int32_t
+#define IN_KEY_T		u_int32_t
+#define IN_VALUE_T		u_int32_t
+#define IN_INTERVAL_T		u_int32_t
+
+typedef struct			s_in_inentry
+{
+  IN_KEY_T			key;
+  IN_ADDR_T			value;
+  IN_INTERVAL_T			interval;
+}				__attribute__((packed)) t_in_inentry;
+
+typedef struct			s_in_lfentry
+{
+  IN_KEY_T			key;
+  IN_VALUE_T			value;
+  IN_INTERVAL_T			interval;
+}				__attribute__((packed)) t_in_lfentry;
+
+#define IN_NAME			"rem1"
+
+#define IN_NODESZ		59
+#define IN_UNUSED_ADDR		-1
+#define IN_UNUSED_KEY		-1
+#define IN_UNUSED_VALUE		-1
+#define IN_FLAGS		BPT_FLAG_CALLBACK
+
+#include "tree.h"
+
+#define IN_INPUT_NOPS		6
+
+t_in_input		input[IN_INPUT_NOPS] =
+{
+  {	0,	IN_ADD,	0,		789,		5	},
+  {	1,	IN_ADD,	0,		48,		5	},
+  {	2,	IN_ADD,	0,		36,		5	},
+  {	3,	IN_ADD,	0,		78,		8	},
+  {	4,	IN_ADD,	0,		58621,		5	},
+  {	5,	IN_REM,	48,		0,		0	},
+};
+
+#define IN_OUTPUT_NOPS		4
+
+t_in_output		output[IN_OUTPUT_NOPS] =
+{
+  {	36,	5	},
+  {	78,	8	},
+  {	789,	5	},
+  {	58621,	5	},
+};

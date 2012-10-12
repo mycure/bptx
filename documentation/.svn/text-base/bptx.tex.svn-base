@@ -1,0 +1,857 @@
+%
+% ---------- header -----------------------------------------------------------
+%
+% project       bpt
+%
+% license       BSD
+%
+% file          /home/mycure/bptx/documentation/bptx.tex
+%
+% created       julien quintard   [thu jul 12 18:39:55 2007]
+% updated       julien quintard   [wed mar  5 05:11:30 2008]
+%
+
+%
+% ---------- packages ---------------------------------------------------------
+%
+
+\documentclass[10pt,a4wide]{article}
+
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{a4wide}
+\usepackage{fancyheadings}
+\usepackage{multicol}
+\usepackage{indentfirst}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{verbatim}
+\usepackage{ifthen}
+
+\usepackage{aeguill}
+
+\pagestyle{fancy}
+
+\def\N{\mbox{I\hspace{-.13em}N}}
+\def\R{\mbox{I\hspace{-.15em}R}}
+
+\lhead{{\scriptsize bptx.h}}
+\rhead{}
+\rfoot{{\scriptsize Julien Quintard}}
+
+\definecolor{functioncolor}{rgb}{0.40,0.00,0.00}
+\definecolor{commandcolor}{rgb}{0.00,0.00,0.40}
+\definecolor{verbatimcolor}{rgb}{0.00,0.40,0.00}
+\definecolor{noticecolor}{rgb}{0.87,0.84,0.02}
+
+\newcommand\name[1]{{\large{\textbf{#1}}}}
+
+\renewcommand\description[1]{
+  \hspace{0.7cm}\textit{Description}
+
+  \begin{tabular}{p{1cm}p{13cm}}
+  & #1
+  \end{tabular}}
+
+\newcommand\declaration[1]{
+  \hspace{0.7cm}\textit{Declaration}
+
+  \begin{tabular}{p{1cm}p{13cm}}
+  & #1
+  \end{tabular}}
+
+\title{bptx.h \\
+       {\scriptsize http://bptx.julienquintard.name}}
+
+\author{{\small Julien Quintard} \\
+        {\scriptsize julien.quintard@epita.fr} \\
+        \\
+        {\small Epita Computer Systems Laboratory} \\
+        {\scriptsize http://www.lse.epita.fr}}
+
+\date{\vspace{1cm}
+      \today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\setlength{\footrulewidth}{0.3pt}
+\setlength{\parindent}{0.3cm}
+\setlength{\parskip}{2ex plus 0.5ex minus 0.2ex}
+
+\newpage
+
+%
+% ---------- introduction -----------------------------------------------------
+%
+
+\section{Introduction}
+
+The \textbf{bpt} header file, developed by \textit{Julien Quintard} at the
+\textit{EPITA Computer Systems Laboratory}, is a macro style toolkit for
+managing fully tunable balanced plus trees. These trees can be stored anywhere
+including main memory, hard drive as well as somewhere on another computer
+through the network.
+
+Since \textit{bpt} was designed to offer developers many possibilities,
+some programmers willing to create common trees -- in main memory with basic
+types for instance -- could find \textit{bpt} pretty hard to use.
+
+\textit{bptx} -- bpt eXtension -- was introduced for making the management
+of \textit{bpt}-based trees in common environments very easy.
+
+\textit{bptx} tries to achieve three goals:
+
+\begin{enumerate}
+  \item
+    Simplify the management of the callbacks related to the device, especially
+    when the tree is located in main memory.
+
+    Indeed, recall that in such a case, the \texttt{load()} and
+    \texttt{unload()} callbacks basically do not do anything.
+  \item
+    Allow the programmer not to worry about the comparison callbacks
+    -- \texttt{addrcmp()}, \texttt{keycmp()} and \texttt{valcmp()} --
+    especially when these types are basic \textit{C} types \textit{i.e}
+    \texttt{char}, \texttt{int}, \texttt{double}, etc.
+  \item
+    Avoid the annoying and quite complex task consisting in managing the
+    array of \textit{unused} blocks which is passed to \textit{bpt}.
+\end{enumerate}
+
+Note that \textit{bptx} is not an ultime solution since programmers willing
+to use \textit{bpt} in specific contexts and/or willing to build advanced
+trees should rely on the \textit{bpt} interface anyway.
+
+The remaining of the document starts by describing the \textit{API} provided
+by \textit{bptx} and then illustrates a complete example.
+
+In the whole document, \textbf{T} stands for the name of the tree. Obviously
+this name must be the same as for \textit{bpt}.
+
+%
+% ---------- parameters -------------------------------------------------------
+%
+
+\section{Parameters}
+
+\textit{bptx} provides macro-functions for parameterizing its behaviour.
+These parameters allow the programmer to choose whether the types comparators
+must be handled by \textit{bptx} or by the programmer itself. The same
+possibility stands for the storage device management as well as the
+\textit{unused} array management.
+
+These macro-functions are described below.
+
+% types
+
+\name{types}
+
+\description
+    {
+      This macro-function generates the necessary types for \textit{bptx}
+      to work properly. Therefore, the macro-function must be called in
+      every \textit{C} source file willing to use the \textit{bptx}
+      interface.
+
+      \-
+
+      This macro-function must be called before \texttt{bpt\_wrapper()}.
+    }
+
+\declaration
+    {
+      \texttt{bptx\_types(T)}
+    }
+
+% storage
+
+\name{storage}
+
+\description
+    {
+      This macro-function, if called, tells \textit{bptx} to manage the
+      accesses to the storage device by generating the \texttt{load()} and
+      \texttt{unload()} callbacks.
+
+      \-
+
+      The \textit{storage} field can take one of the following values:
+
+      \begin{itemize}
+	\item
+	  \texttt{RAM} if the tree actually resides in main memory.
+      \end{itemize}
+
+      \-
+
+      This macro-function must be called only once since it generates
+      functions.
+    }
+
+\declaration
+    {
+      \texttt{bptx\_storage(T, storage)}
+    }
+
+% compare
+
+\name{compare}
+
+\description
+    {
+      This macro-function tells \textit{bptx} to handle the comparison
+      of such \textit{object}s by generating a callback function of type
+      \textit{type}.
+
+      \-
+
+      \textit{object} can take one of the tree following values:
+
+      \begin{itemize}
+	\item
+	  \texttt{address} if the programmer wants \textit{bptx} to handle
+	  the comparison of \textit{bpt} addresses: \texttt{t\_bpt\_addr(T)}.
+	\item
+	  \texttt{key} if the programmer wants \textit{bptx} to handle
+	  the comparison of \textit{bpt} keys: \texttt{t\_bpt\_key(T)}.
+	\item
+	  \texttt{value} if the programmer wants \textit{bptx} to handle
+	  the comparison of \textit{bpt} values: \texttt{t\_bpt\_value(T)}.
+      \end{itemize}
+
+      \-
+
+      \textit{type} can take one of the following value:
+
+      \begin{itemize}
+	\item
+	  \texttt{scalar} if the type to compare is a basic \textit{C} type
+	  including \texttt{char}, \texttt{short}, \texttt{int}, \texttt{quad},
+	  \texttt{float}, \texttt{double} etc. in other words every time
+	  which can be compared through the operator $<$ and $>$.
+	\item
+	  \texttt{string} if the type to compare is a string \textit{i.e}
+	  of type \texttt{char*}.
+      \end{itemize}
+
+      \-
+
+      As for \texttt{bptx\_storage()} this macro-function must be called
+      only once per \textit{object}.
+    }
+
+\declaration
+    {
+      \texttt{bptx\_compare(T, object, type)}
+    }
+
+% wrapper
+
+\name{wrapper}
+
+\description
+    {
+      This macro-function activates the wrapper and tells \textit{bptx}
+      to manage the array of \textit{unused} blocks itself.
+
+      \-
+
+      \textit{allocate} and \textit{free} specify the functions responsible
+      for allocating and releasing areas on the device.
+
+      \-
+
+      This macro-function must also be called only once.
+    }
+
+\declaration
+    {
+      \texttt{bptx\_wrapper(T,}
+
+      \hspace{2.3cm}\texttt{t\_bpt\_addr(T) (*allocate)(unsigned int),}
+
+      \hspace{2.3cm}\texttt{void (*free)(t\_bpt\_addr(T)))}
+    }
+
+% load callback
+
+\name{load callback}
+
+\description
+    {
+      This macro-function returns the address of the \texttt{load()} callback
+      generated by \texttt{bptx\_storage()}.
+    }
+
+\declaration
+    {
+      \texttt{bptx\_load(T)}
+    }
+
+% unload callback
+
+\name{unload callback}
+
+\description
+    {
+      This macro-function returns the address of the \texttt{unload()} callback
+      generated by \texttt{bptx\_storage()}.
+    }
+
+\declaration
+    {
+      \texttt{bptx\_unload(T)}
+    }
+
+% address comparison callback
+
+\name{address comparison callback}
+
+\description
+    {
+      This macro-function returns the address of the \texttt{addrcmp()}
+      callback generated by \texttt{bptx\_compare()}.
+    }
+
+\declaration
+    {
+      \texttt{bptx\_addrcmp(T)}
+    }
+
+% key comparison callback
+
+\name{keycmp}
+
+\description
+    {
+      This macro-function returns the address of the \texttt{keycmp()} callback
+      generated by \texttt{bptx\_compare()}.
+    }
+
+\declaration
+    {
+      \texttt{bptx\_keycmp(T)}
+    }
+
+% value comparison callback
+
+\name{value comparison callback}
+
+\description
+    {
+      This macro-function returns the address of the \texttt{valcmp()} callback
+      generated by \texttt{bptx\_compare()}.
+    }
+
+\declaration
+    {
+      \texttt{bptx\_valcmp(T)}
+    }
+
+%
+% ---------- api --------------------------------------------------------------
+%
+
+\section{API}
+
+\textit{bptx} provides a set of macro-functions over \textit{bpt}. However,
+these macro-functions can only be used if the macro-function
+\texttt{bptx\_wrapper()} was previously called.
+
+% initialize
+
+\name{initialize}
+
+\description
+    {
+      This macro-function initializes a previously generated tree.
+
+      \-
+
+      \textit{nodesz} represents the node size in bytes.
+
+      \-
+
+      \textit{uaddr}, \textit{ukey} and \textit{uval} specify the values
+      representing an unused address, key and value, respectively.
+
+      \-
+
+      \textit{flags} specifies the tree flags: \texttt{BPT\_FLAG\_COLLIDE}
+      for enabling collisions handling, \texttt{BPT\_FLAG\_CALLBACK} for
+      activating the callback \texttt{callback()} and \texttt{BPT\_FLAG\_ZERO}
+      for no flags.
+
+      \-
+
+      \textit{balancing} specifies the threshold under which the nodes'
+      entries are re-balanced. Although every value comprised in $]0, 100[$
+      is accepted, macros are provided: \texttt{BPT\_BALANCING\_PLUS} for
+      balanced+ trees \textit{i.e} $50\%$ and \texttt{BPT\_BALANCING\_STAR} for
+      balanced* trees \textit{i.e} $75\%$.
+
+      \-
+
+      \textit{load}, \textit{unload}, \textit{addrcmp}, \textit{keycmp}
+      \textit{valcmp} and \textit{callback} specify the callback functions
+      address. Note that \textit{callback} is optional depending on the
+      flags.
+
+      \-
+
+      \textit{data} is user-specific and is stored in the \textit{bpt}
+      core structure.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_init(T, t\_bpt(T)* bpt,}
+
+      \hspace{2.6cm}\texttt{t\_bpt\_ndi(T) nodesz, t\_bpt\_addr(T) uaddr,}
+
+      \hspace{2.6cm}\texttt{t\_bpt\_key(T) ukey, t\_bpt\_value(T) uval,}
+
+      \hspace{2.6cm}\texttt{t\_bpt\_flags flags, BPT\_BALANCING\_T balancing,}
+
+      \hspace{2.6cm}\texttt{t\_bpt\_load\_fn(T) load,
+                            t\_bpt\_unload\_fn(T) unload,}
+
+      \hspace{2.6cm}\texttt{t\_bpt\_addrcmp\_fn(T) addrcmp,
+                            t\_bpt\_keycmp\_fn(T) keycmp,}
+
+      \hspace{2.6cm}\texttt{t\_bpt\_valcmp\_fn(T) valcmp,
+                            t\_bpt\_cb\_fn(T) callback,}
+
+      \hspace{2.6cm}\texttt{void* data)}
+    }
+
+% add
+
+\name{add}
+
+\description
+    {
+      This macro-function adds a record -- a leaf entry -- into the tree
+      \textit{T}.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_add(T, t\_bpt(T)* bpt, t\_bpt\_lfentry(T)* lfentry)}
+    }
+
+% modify
+
+\name{modify}
+
+\description
+    {
+      This macro-function modifies the entry with the key \textit{key}
+      by inserting the new record \textit{lfentry}.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_modify(T, t\_bpt(T)* bpt, t\_bpt\_key(T) key,}
+
+      \hspace{3.0cm}\texttt{t\_bpt\_lfentry(T)* lfentry)}
+    }
+
+% remove
+
+\name{remove}
+
+\description
+    {
+      This macro-function removes the entry identified by \textit{key}.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_remove(T, t\_bpt(T)* bpt, t\_bpt\_key(T) key)}
+    }
+
+% search
+
+\name{search}
+
+\description
+    {
+      This macro-function looks up for the entry with the key \textit{key}.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_search(T, t\_bpt(T)* bpt, t\_bpt\_key(T) key,}
+
+      \hspace{3.0cm}\texttt{t\_bpt\_entry(T)* entry)}
+    }
+
+% clean
+
+\name{clean}
+
+\description
+    {
+      This macro-function cleans the tree.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_clean(T, t\_bpt(T)* bpt)}
+    }
+
+% first entry
+
+\name{first entry}
+
+\description
+    {
+      This macro-function returns the first entry of the specified node
+      \textit{node}.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_first\_entry(T, t\_bpt(T)* bpt, t\_bpt\_imm(T)* node,}
+
+      \hspace{3.9cm}\texttt{t\_bpt\_ndi(T)* first)}
+    }
+
+% last entry
+
+\name{last entry}
+
+\description
+    {
+      This macro-function returns the last entry of the specified node
+      \textit{node}.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_last\_entry(T, t\_bpt(T)* bpt, t\_bpt\_imm(T)* node,}
+
+      \hspace{3.7cm}\texttt{t\_bpt\_ndi(T)* last)}
+    }
+
+% previous entry
+
+\name{previous entry}
+
+\description
+    {
+      This macro-function returns the location of the entry preceding
+      the entry \textit{current}.
+
+      \-
+
+      The \textit{opts} argument can take \texttt{BPT\_OPT\_NODE} for
+      looking for a previous entry in the current node or
+      \texttt{BPT\_OPT\_TREE} for returning the previous entry in the
+      whole tree.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_prev\_entry(T, t\_bpt(T)* bpt,
+                                    t\_bpt\_entry(T) current,}
+
+      \hspace{3.8cm}\texttt{t\_bpt\_entry(T)* previous,
+                            t\_bpt\_opts opts)}
+    }
+
+% next entry
+
+\name{next entry}
+
+\description
+    {
+      This macro-function returns the location of the entry following
+      the entry \textit{current}.
+
+      \-
+
+      The \textit{opts} argument can take \texttt{BPT\_OPT\_NODE} for
+      looking for the next entry in the current node or
+      \texttt{BPT\_OPT\_TREE} for returning the next entry in the
+      whole tree.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_next\_entry(T, t\_bpt(T)* bpt,
+                                    t\_bpt\_entry(T) current,}
+
+      \hspace{3.8cm}\texttt{t\_bpt\_entry(T)* next,
+                            t\_bpt\_opts opts)}
+    }
+
+% search entry
+
+\name{search entry}
+
+\description
+    {
+      This macro-function looks for an entry in the specified node
+      \textit{node}.
+
+      \-
+
+      \textit{opts} can take the following values: \texttt{BPT\_OPT\_PERFECT}
+      looks for an entry with the exact key \textit{key} while
+      \texttt{BPT\_OPT\_PARTIAL} looks for an entry having an equal or
+      highest -- but smallest -- key.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_search\_entry(T, t\_bpt(T)* bpt, t\_bpt\_imm(T)* node,}
+
+      \hspace{4.1cm}\texttt{t\_bpt\_key(T) key, t\_bpt\_ndi(T)* ndi,}
+
+      \hspace{4.1cm}\texttt{t\_bpt\_opts opts)}
+    }
+
+% node size
+
+\name{node size}
+
+\description
+    {
+      This macro-function returns the current number of entries used in
+      the node \textit{node}.
+    }
+
+\declaration
+    {
+      \texttt{t\_bpt\_ndi(T) bptx\_node\_size(T, t\_bpt(T)* bpt,
+                                              t\_bpt\_imm(T)* node)}
+    }
+
+% list
+
+\name{list}
+
+\description
+    {
+      This macro-function returns the head or tail entry of the linked-list
+      composed of the leaf nodes.
+
+      \-
+
+      \textit{opts} specifies the elements looked for: the head through
+      \texttt{BPT\_OPT\_HEAD} or the tail through \texttt{BPT\_OPT\_TAIL}.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_list(T, t\_bpt(T)* bpt, t\_bpt\_imm(T)* node,}
+
+      \hspace{2.6cm}\texttt{t\_bpt\_entry(T)* entry, t\_bpt\_opts opts)}
+    }
+
+% key
+
+\name{key}
+
+\description
+    {
+      This macro-function returns the highest key contained in the node
+      \textit{node}.
+
+      \-
+
+      This macro-function is mainly used by \textit{bpt} even though
+      an advanced \textit{bpt} developer could find it useful.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_key(T, t\_bpt(T)* bpt, t\_bpt\_imm(T)* node,
+                            t\_bpt\_key(T)* key)}
+    }
+
+% update
+
+\name{update}
+
+\description
+    {
+      This macro-function recursively update some values in the parent nodes
+      of node \textit{node}.
+
+      \-
+
+      This macro-function is mainly used by \textit{bpt} itself.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_update(T, t\_bpt(T)* bpt, t\_bpt\_imm(T)* node,
+                               t\_bpt\_opts opts)}
+    }
+
+% foreach
+
+\name{foreach}
+
+\description
+    {
+      This macro-function provides a very easy way for the programmer to
+      go through the records. This function updates \textit{entry} with
+      the next record.
+    }
+
+\declaration
+    {
+      \texttt{bptx\_foreach(T, t\_bpt(T)* bpt, t\_bpt\_entry(T)* entry)}
+    }
+
+% collide search
+
+\name{collide search}
+
+\description
+    {
+      This macro-function looks for an entry matching the tuple $(key, value)$.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_collide\_search(T, t\_bpt(T)* bpt, t\_bpt\_key(T) key,}
+
+      \hspace{4.5cm}\texttt{t\_bpt\_value(T) value, t\_bpt\_entry(T)* entry)}
+    }
+
+% collide modify
+
+\name{collide modify}
+
+\description
+    {
+      This macro-function modifies an entry possibly in collision.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_collide\_modify(T, t\_bpt(T)* bpt,
+                                        t\_bpt\_entry(T) entry,}
+
+      \hspace{4.5cm}\texttt{t\_bpt\_lfentry(T)* lfentry)}
+    }
+
+% collide remove
+
+\name{collide remove}
+
+\description
+    {
+      This macro-function removes an entry in collision.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_collide\_remove(T, t\_bpt(T)* bpt,
+                                        t\_bpt\_entry(T) entry)}
+    }
+
+% collide next
+
+\name{collide next}
+
+\description
+    {
+      This macro-function returns the next entry in collision.
+    }
+
+\declaration
+    {
+      \texttt{int bptx\_collide\_next(T, t\_bpt(T)* bpt, t\_bpt\_key(T)* key,}
+
+      \hspace{4.1cm}\texttt{t\_bpt\_entry(T)* entry)}
+    }
+
+%
+% ---------- example ----------------------------------------------------------
+%
+
+\section{Example}
+
+Let's see a simple example.
+
+\begin{verbatim}
+  #include <sys/types.h>
+  #include <stdlib.h>
+  #include ``bpt.h''
+  #include ``bptx.h''
+
+  #define TREE_NODESZ             4096
+  #define TREE_UADDR              -1
+  #define TREE_UKEY               -1
+  #define TREE_UVAL               -1
+  #define TREE_ADDR_T             u_int32_t
+  #define TREE_KEY_T              u_int32_t
+  #define TREE_VALUE_T            u_int32_t
+  #define TREE_FLAGS              BPT_FLAG_COLLIDE
+
+  typedef struct          s_tree_inentry
+  {
+    TREE_ADDR_T           value;
+    TREE_KEY_T            key;
+  }                       t_tree_inentry;
+
+  typedef struct          s_tree_lfentry
+  {
+    TREE_VALUE_T          value;
+    TREE_KEY_T            key;
+    u_int8_t              klc;
+  }                       t_tree_lfentry;
+
+  bpt_make(tree, BPT_NDI_T, BPT_UNI_T, BPT_NODES_T,
+           BPT_HEIGHT_T, TREE_ADDR_T, TREE_KEY_T, TREE_VALUE_T,
+           t_tree_inentry, t_tree_lfentry, key, value);
+
+  bptx_types(tree);
+
+  bptx_storage(tree, RAM);
+
+  bptx_compare(tree, address, scalar);
+  bptx_compare(tree, key, scalar);
+  bptx_compare(tree, value, scalar);
+
+  bptx_wrapper(tree,
+               (t_bpt_addr(tree) (*)(unsigned int))malloc,
+               (void (*)(t_bpt_addr(tree)))free);
+
+  int                     main(int                                argc,
+                               char                               **argv)
+  {
+    t_bpt_lfentry(tree)   lfentry;
+    t_bpt(tree)           bpt;
+
+    bptx_init(tree, bpt, TREE_NODESZ, TREE_UADDR, TREE_UKEY, TREE_UVAL,
+              TREE_FLAGS, BPT_BALANCING_PLUS, bptx_load(tree),
+              bptx_unload(tree), bptx_addrcmp(tree), bptx_keycmp(tree),
+              bptx_valcmp(tree), NULL, NULL);
+
+    lfentry.key = 42;
+    lfentry.value = 84;
+
+    bptx_add(tree, bpt, &lfentry);
+
+    bptx_clean(tree, bpt);
+
+    return (0);
+  }
+\end{verbatim}
+
+The reader interested in more complex and/or complete examples should take
+a look to the \textit{bptx} release which contains examples and tests.
+
+\end{document}
